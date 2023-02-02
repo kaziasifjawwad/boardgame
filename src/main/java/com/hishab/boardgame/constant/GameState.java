@@ -1,8 +1,7 @@
-package com.hishab.boardgame.game;
+package com.hishab.boardgame.constant;
 
 public enum GameState {
     INITIAL_STATE,
-    ENTRY_STATE,
     SCORE_STATE,
     WINNER_STATE
 }

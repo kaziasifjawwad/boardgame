@@ -1,5 +1,6 @@
-package com.hishab.boardgame.game;
+package com.hishab.boardgame.domain;
 
+import com.hishab.boardgame.constant.GameState;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -10,7 +11,7 @@ public class PlayerScore {
     private int score;
 
     public PlayerScore() {
-        this.gameState = GameState.ENTRY_STATE;
+        this.gameState = GameState.INITIAL_STATE;
         this.score = 0;
     }
 

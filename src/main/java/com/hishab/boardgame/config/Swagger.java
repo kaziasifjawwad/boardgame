@@ -1,4 +1,4 @@
-package com.hishab.boardgame.game;
+package com.hishab.boardgame.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

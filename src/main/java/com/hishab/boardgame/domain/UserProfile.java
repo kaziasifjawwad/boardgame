@@ -1,4 +1,4 @@
-package com.hishab.boardgame.game;
+package com.hishab.boardgame.domain;
 
 import lombok.Data;
 import lombok.experimental.Accessors;

@@ -1,6 +1,11 @@
-package com.hishab.boardgame.game;
+package com.hishab.boardgame.service;
 
+import com.hishab.boardgame.constant.GameState;
+import com.hishab.boardgame.domain.CurrentStateResponse;
+import com.hishab.boardgame.domain.PlayerScore;
+import com.hishab.boardgame.domain.UserProfile;
 import com.hishab.boardgame.exeptionhandler.ExtendedRuntimeException;
+import com.hishab.boardgame.mapper.ScoreMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -12,7 +17,7 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class Playground {
+public class PlaygroundService {
     private final DiceService diceService;
     private final Map<UserProfile, PlayerScore> mapOfPlayerToScore;
     private final List<UserProfile> listOfPlayer;
@@ -20,11 +25,14 @@ public class Playground {
     private Integer totalScore;
     private int currentPlayerIndex;
     private int playerCounter;
+    private ScoreMapper scoreMapper;
 
-    public Playground() {
+
+    public PlaygroundService() {
         this.listOfPlayer = new ArrayList<>();
         this.mapOfPlayerToScore = new LinkedHashMap<>();
         this.diceService = new DiceService();
+        this.scoreMapper = new ScoreMapper();
         playerCounter = 0;
         winState = true;
     }
@@ -42,6 +50,10 @@ public class Playground {
         playerCounter += 1;
     }
 
+    public List<CurrentStateResponse> getCurrentState(){
+        return this.scoreMapper.map(this.mapOfPlayerToScore);
+    }
+
 
     public void play() {
         if (playerCounter < 2) throw new ExtendedRuntimeException("At least two player is required to play this game");
@@ -49,7 +61,7 @@ public class Playground {
             int dice;
             var currentPlayer = this.listOfPlayer.get(this.currentPlayerIndex);
             var playerScore = mapOfPlayerToScore.get(currentPlayer);
-            if (playerScore.getGameState().equals(GameState.ENTRY_STATE)) {
+            if (playerScore.getGameState().equals(GameState.INITIAL_STATE)) {
                 dice = diceService.nextFromApi();
                 if (dice == 6) {
                     log.info("{} GOT first move", currentPlayer.getName());
@@ -93,7 +105,7 @@ public class Playground {
         int dice;
         var currentPlayer = this.listOfPlayer.get(this.currentPlayerIndex);
         var playerScore = mapOfPlayerToScore.get(currentPlayer);
-        if (playerScore.getGameState().equals(GameState.ENTRY_STATE)) {
+        if (playerScore.getGameState().equals(GameState.INITIAL_STATE)) {
             dice = diceService.nextFromApi();
             if (dice == 6) {
                 log.info("{} GOT first move", currentPlayer.getName());
