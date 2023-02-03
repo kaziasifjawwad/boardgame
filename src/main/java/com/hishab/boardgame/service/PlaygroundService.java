@@ -6,6 +6,8 @@ import com.hishab.boardgame.domain.PlayerScore;
 import com.hishab.boardgame.domain.UserProfile;
 import com.hishab.boardgame.exeptionhandler.ExtendedRuntimeException;
 import com.hishab.boardgame.mapper.ScoreMapper;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -17,16 +19,18 @@ import java.util.Map;
 
 @Component
 @Slf4j
+@Getter
+@Setter
 public class PlaygroundService {
-    private final DiceService diceService;
-    private final Map<UserProfile, PlayerScore> mapOfPlayerToScore;
-    private final List<UserProfile> listOfPlayer;
+    private DiceService diceService;
+    private Map<UserProfile, PlayerScore> mapOfPlayerToScore;
+    private List<UserProfile> listOfPlayer;
     private Boolean winState;
     private Integer totalScore;
     private int currentPlayerIndex;
     private int playerCounter;
     private ScoreMapper scoreMapper;
-
+    private UserProfile winnerProfile;
 
     public PlaygroundService() {
         this.listOfPlayer = new ArrayList<>();
@@ -50,96 +54,70 @@ public class PlaygroundService {
         playerCounter += 1;
     }
 
-    public List<CurrentStateResponse> getCurrentState(){
+    public List<CurrentStateResponse> getCurrentState() {
         return this.scoreMapper.map(this.mapOfPlayerToScore);
     }
 
+    private void giveDiceToNextPlayer() {
+        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
+    }
 
     public void play() {
         if (playerCounter < 2) throw new ExtendedRuntimeException("At least two player is required to play this game");
         while (winState) {
             int dice;
             var currentPlayer = this.listOfPlayer.get(this.currentPlayerIndex);
-            var playerScore = mapOfPlayerToScore.get(currentPlayer);
-            if (playerScore.getGameState().equals(GameState.INITIAL_STATE)) {
-                dice = diceService.nextFromApi();
-                if (dice == 6) {
-                    log.info("{} GOT first move", currentPlayer.getName());
+            var currentPlayerScore = mapOfPlayerToScore.get(currentPlayer);
+            var gameStateOfCurrentPlayer = currentPlayerScore.getGameState();
+            switch (gameStateOfCurrentPlayer) {
+                case INITIAL_STATE:
                     dice = diceService.nextFromApi();
-                    if (dice != 4) {
-                        playerScore.setGameState(GameState.SCORE_STATE);
-                        playerScore.incrementScore(dice);
-                        if (dice != 6) {
-                            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-                        }
-
+                    switch (dice) {
+                        case 6:
+                            log.info("{} hit 6 and got his first move for accumulating score\n", currentPlayer.getName());
+                            dice = diceService.nextFromApi();
+                            switch (dice) {
+                                case 4:
+                                    giveDiceToNextPlayer();
+                                    break;
+                                case 6:
+                                    currentPlayerScore.setGameState(GameState.SCORE_STATE);
+                                    currentPlayerScore.incrementScore(dice);
+                                    break;
+                                default:
+                                    currentPlayerScore.setGameState(GameState.SCORE_STATE);
+                                    currentPlayerScore.incrementScore(dice);
+                                    giveDiceToNextPlayer();
+                            }
+                            break;
+                        default:
+                            giveDiceToNextPlayer();
                     }
+                    log.info("Player name: {}, Total Score: {}, Current Value of Dice: {}", currentPlayer.getName(),
+                            currentPlayerScore.getScore(), dice);
+                    break;
 
-                } else {
-                    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-                }
-                log.info("{} HIT {} ----> CURRENT SCORE---> {}", currentPlayer.getName(), dice, playerScore.getScore());
-            } else if (playerScore.getGameState().equals(GameState.SCORE_STATE)) {
-                dice = diceService.nextFromApi();
-                if (dice == 4) {
-                    playerScore.incrementScore(-dice);
-                    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-                } else if (dice == 6) {
-                    playerScore.incrementScore(dice);
-                } else {
-                    playerScore.incrementScore(dice);
-                    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-                }
-                log.info("{} HIT {} ----> CURRENT SCORE---> {}", currentPlayer.getName(), dice, playerScore.getScore());
+                case SCORE_STATE:
+                    dice = diceService.nextFromApi();
+                    switch (dice) {
+                        case 4:
+                            currentPlayerScore.decrementScore(dice);
+                            giveDiceToNextPlayer();
+                            break;
+                        case 6:
+                            currentPlayerScore.incrementScore(dice);
+                            break;
+                        default:
+                            currentPlayerScore.incrementScore(dice);
+                            giveDiceToNextPlayer();
+                    }
+                    log.info("Player name: {}, Total Score: {}, Current Value of Dice: {}", currentPlayer.getName(),
+                            currentPlayerScore.getScore(), dice);
             }
-            if (playerScore.getScore() >= this.totalScore) {
-                log.info("WINNER -----------> {}", currentPlayer.getName());
-                playerScore.setGameState(GameState.WINNER_STATE);
+            if (currentPlayerScore.getScore() >= this.totalScore) {
+                this.winnerProfile = currentPlayer;
                 winState = false;
             }
-        }
-    }
-
-
-    public void playWithRestApi() {
-        int dice;
-        var currentPlayer = this.listOfPlayer.get(this.currentPlayerIndex);
-        var playerScore = mapOfPlayerToScore.get(currentPlayer);
-        if (playerScore.getGameState().equals(GameState.INITIAL_STATE)) {
-            dice = diceService.nextFromApi();
-            if (dice == 6) {
-                log.info("{} GOT first move", currentPlayer.getName());
-                dice = diceService.nextFromApi();
-                if (dice != 4) {
-                    playerScore.setGameState(GameState.SCORE_STATE);
-                    playerScore.incrementScore(dice);
-                    if (dice != 6) {
-                        this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-                    }
-
-                }
-
-            } else {
-                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-            }
-            log.info("{} HIT {} ----> CURRENT SCORE---> {}", currentPlayer.getName(), dice, playerScore.getScore());
-        } else if (playerScore.getGameState().equals(GameState.SCORE_STATE)) {
-            dice = diceService.nextFromApi();
-            if (dice == 4) {
-                playerScore.incrementScore(-dice);
-                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-            } else if (dice == 6) {
-                playerScore.incrementScore(dice);
-            } else {
-                playerScore.incrementScore(dice);
-                this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
-            }
-            log.info("{} HIT {} ----> CURRENT SCORE---> {}", currentPlayer.getName(), dice, playerScore.getScore());
-        }
-        if (playerScore.getScore() >= this.totalScore) {
-            log.info("WINNER -----------> {}", currentPlayer.getName());
-            playerScore.setGameState(GameState.WINNER_STATE);
-            winState = false;
         }
     }
 }

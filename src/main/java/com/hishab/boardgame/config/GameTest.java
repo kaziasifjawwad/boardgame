@@ -13,12 +13,12 @@
 //    private PlaygroundService playground;
 //
 //    @Override
-//    public void run(String... args){
+//    public void run(String... args) {
 //        UserProfile firstProfile = new UserProfile().setName("Asif").setAge(10);
 //        UserProfile secondProfile = new UserProfile().setName("Arif").setAge(20);
 //        UserProfile thirdProfile = new UserProfile().setName("Munaf").setAge(40);
 //
-//        playground.setTotalScore(100);
+//        playground.setTotalScore(40);
 //        playground.addNewPlayer(firstProfile);
 //        playground.addNewPlayer(secondProfile);
 //        playground.addNewPlayer(thirdProfile);

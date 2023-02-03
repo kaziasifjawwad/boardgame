@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Objects;
+
 public class DiceService {
     RestTemplate restTemplate;
 
@@ -25,9 +26,5 @@ public class DiceService {
                         ("http://developer-test.hishab.io/api/v1/roll-dice",
                                 HttpMethod.GET, entity, Score.class).getBody())
                 .getScore();
-    }
-
-    public int nextDice() {
-        return 1 + (int) (Math.random() * ((6 - 1) + 1));
     }
 }
