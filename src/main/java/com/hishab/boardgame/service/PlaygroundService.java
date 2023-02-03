@@ -9,6 +9,7 @@ import com.hishab.boardgame.mapper.ScoreMapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -31,6 +32,9 @@ public class PlaygroundService {
     private int playerCounter;
     private ScoreMapper scoreMapper;
     private UserProfile winnerProfile;
+
+    @Value("${boardgame.playbackspeed}")
+    private Long playBackSpeed;
 
     public PlaygroundService() {
         this.listOfPlayer = new ArrayList<>();
@@ -65,6 +69,11 @@ public class PlaygroundService {
     public void play() {
         if (playerCounter < 2) throw new ExtendedRuntimeException("At least two player is required to play this game");
         while (winState) {
+            try {
+                Thread.sleep(playBackSpeed);
+            } catch (InterruptedException e) {
+                throw new ExtendedRuntimeException("Interrupted by something");
+            }
             int dice;
             var currentPlayer = this.listOfPlayer.get(this.currentPlayerIndex);
             var currentPlayerScore = mapOfPlayerToScore.get(currentPlayer);

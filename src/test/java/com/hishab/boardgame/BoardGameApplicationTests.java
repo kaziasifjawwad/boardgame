@@ -33,6 +33,7 @@ class BoardGameApplicationTests {
         playgroundService.setScoreMapper(new ScoreMapper());
         playgroundService.setPlayerCounter(0);
         playgroundService.setWinState(true);
+        playgroundService.setPlayBackSpeed(Long.parseLong("0"));
     }
 
     @Test
