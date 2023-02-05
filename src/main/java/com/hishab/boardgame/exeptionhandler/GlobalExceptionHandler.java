@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ExtendedRuntimeException.class)
-    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     public ErrorMessage resourceNotFoundException(ExtendedRuntimeException ex, HttpServletRequest request) {
         return new ErrorMessage(
                 ex.getMessage(),

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -32,6 +33,7 @@ public class PlaygroundService {
     private int playerCounter;
     private ScoreMapper scoreMapper;
     private UserProfile winnerProfile;
+    private boolean isGameStarted;
 
     @Value("${boardgame.playbackspeed}")
     private Long playBackSpeed;
@@ -46,19 +48,29 @@ public class PlaygroundService {
     }
 
     public void setTotalScore(int totalScore) {
+        if (totalScore < 1) throw new ExtendedRuntimeException("Total score must be greater than zero.");
         if (ObjectUtils.isEmpty(this.totalScore)) this.totalScore = totalScore;
         else throw new ExtendedRuntimeException("Total score can be defined once per game.");
+    }
+
+    private void checkDuplicateName(String name){
+        var isPlayerAlreadyExistsWitName =  this.mapOfPlayerToScore.keySet()
+                .stream().map(profile->profile.getName().toLowerCase()).collect(Collectors.toList())
+                .contains(name.toLowerCase());
+        if(isPlayerAlreadyExistsWitName) throw new ExtendedRuntimeException("Duplicate name is not allowed");
     }
 
     public void addNewPlayer(UserProfile player) {
         if (this.playerCounter == 4) throw new
                 ExtendedRuntimeException("Maximum number of player exceed. Only four people can play at a time.");
+        checkDuplicateName(player.getName());
         mapOfPlayerToScore.put(player, new PlayerScore());
         listOfPlayer.add(player);
         playerCounter += 1;
     }
 
     public List<CurrentStateResponse> getCurrentState() {
+        if (!isGameStarted) throw new ExtendedRuntimeException("Game not started yet");
         return this.scoreMapper.map(this.mapOfPlayerToScore);
     }
 
@@ -66,8 +78,16 @@ public class PlaygroundService {
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.listOfPlayer.size();
     }
 
+    private void isApplicableForPlay() {
+        String errorMessage = "";
+        if (this.totalScore == null || this.totalScore <= 0) errorMessage += "Total score need to be defined./n";
+        if (this.mapOfPlayerToScore.size() < 2) errorMessage += "At least two player is required to play this game";
+        if (errorMessage.length() > 0) throw new ExtendedRuntimeException(errorMessage);
+    }
+
     public void play() {
-        if (playerCounter < 2) throw new ExtendedRuntimeException("At least two player is required to play this game");
+        isApplicableForPlay();
+        this.isGameStarted = true;
         while (winState) {
             try {
                 Thread.sleep(playBackSpeed);

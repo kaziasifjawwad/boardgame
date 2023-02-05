@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @Api(value = "board-game", tags = "board-game")
-@RequestMapping(path = "board-game")
+@RequestMapping(path = "api/v1/board-game")
 public interface BoardGameApi {
 
     @ApiOperation(
@@ -23,7 +23,7 @@ public interface BoardGameApi {
             tags = {
                     "board-game",
             })
-    @PostMapping
+    @PostMapping("player")
     ResponseEntity<Void> createNewPlayer(@RequestBody UserProfile registrationRequest);
 
     @ApiOperation(
