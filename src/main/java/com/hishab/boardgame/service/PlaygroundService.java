@@ -146,6 +146,9 @@ public class PlaygroundService {
             if (currentPlayerScore.getScore() >= this.totalScore) {
                 this.winnerProfile = currentPlayer;
                 winState = false;
+                System.out.println("\n\nWinner of this game");
+                System.out.println("Name : "+ currentPlayer.getName());
+                System.out.println("Score : "+ currentPlayerScore.getScore());
             }
         }
     }
